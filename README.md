@@ -6,7 +6,7 @@ To learn more information about URLhaus, please go to: https://urlhaus.abuse.ch
 
 Check out the integration in action below:
 
-![urlhaus](https://user-images.githubusercontent.com/22529325/59939162-0e87ea80-9425-11e9-84c1-b120e9ae7fa0.gif)
+![urlhaus](https://user-images.githubusercontent.com/22529325/59939394-cddca100-9425-11e9-9c79-79bb94564ada.gif)
 
 ### URLhaus URL
 The base URL to use for the URLhaus API
