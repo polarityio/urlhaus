@@ -101,7 +101,7 @@ module.exports = {
         name: "Minimum URL count",
         description: "Minimum URL count to be notified about.",
         default: "0",
-        type: "text",
+        type: "number",
         userCanEdit: true,
         adminOnly: false
     },
