@@ -77,7 +77,7 @@ module.exports = {
     rejectUnauthorized: true
   },
   logging: {
-    level: 'info' //trace, debug, info, warn, error, fatal
+    level: 'trace' //trace, debug, info, warn, error, fatal
   },
   /**
    * Options that are displayed to the user/admin in the Polarity integration user-interface.  Should be structured
@@ -95,6 +95,15 @@ module.exports = {
       type: 'text',
       userCanEdit: false,
       adminOnly: true
+    },
+    {
+        key: "minUrl",
+        name: "Minimum URL count",
+        description: "Minimum URL count to be notified about.",
+        default: "0",
+        type: "text",
+        userCanEdit: true,
+        adminOnly: false
     },
     {
       key: 'blacklist',

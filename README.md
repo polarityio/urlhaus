@@ -11,6 +11,9 @@ Check out the integration in action below:
 ### URLhaus URL
 The base URL to use for the URLhaus API
 
+### Minimum URL Count
+Minimum count of urls to be notified on from URLhaus
+
 ### Domain and IP Blacklist
 
 This is an alternate option that can be used to specify domains or IPs that you do not want sent to RiskIQ.  The data must specify the entire IP or domain to be blocked (e.g., www.google.com is treated differently than google.com).
