@@ -97,6 +97,15 @@ module.exports = {
       adminOnly: true
     },
     {
+        key: "minUrl",
+        name: "Minimum URL count",
+        description: "Minimum URL count to be notified about.",
+        default: "0",
+        type: "text",
+        userCanEdit: true,
+        adminOnly: false
+    },
+    {
       key: 'blacklist',
       name: 'Blacklist Domains and IPs',
       description: 'List of domains and IPs that you never want to send to URLhaus',
