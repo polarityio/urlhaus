@@ -111,8 +111,12 @@
     <div class="mb-1">
       {{#if url.url}}
       <div>
-          <span class="p-key">URL: </span>
-          <span class="p-value"><a href="{{url.urlhaus_reference}}">{{url.url}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
+        <span class="p-key">Malware URL: </span>
+        <span class="p-value">{{url.url}}</span>
+      </div>
+      <div>
+        <span class="p-key">More Info:</span>
+        <span class="p-value"><a href="{{url.urlhaus_reference}}">View URL in URLhaus {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
       </div>
       {{/if}}
       {{#if (eq url.url_status "online")}}
