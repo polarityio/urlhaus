@@ -16,15 +16,15 @@ Minimum count of urls to be notified on from URLhaus
 
 ### Domain and IP Blacklist
 
-This is an alternate option that can be used to specify domains or IPs that you do not want sent to RiskIQ.  The data must specify the entire IP or domain to be blocked (e.g., www.google.com is treated differently than google.com).
+This is an alternate option that can be used to specify domains or IPs that you do not want sent to URLHaus.  The data must specify the entire IP or domain to be blocked (e.g., www.google.com is treated differently than google.com).
 
-### Domain Blacklist Regex
+### Ignored Domain Regex
 
-This option allows you to specify a regex to blacklist domains.  Any domain matching the regex will not be looked up.  If the regex is left blank then no domains will be blacklisted.
+This option allows you to specify a regex to set domains.  Any domain matching the regex will not be looked up.
 
-### IP Blacklist Regex
+### Ignored IP Regex
 
-This option allows you to specify a regex to blacklist IPv4 Addresses.  Any IPv4 matching the regex will not be looked up.  If the regex is left blank then no IPv4s will be blacklisted.
+This option allows you to specify a regex to set IPv4 Addresses.  Any IPv4 matching the regex will not be looked up.
 
 ## Installation Instructions
 
