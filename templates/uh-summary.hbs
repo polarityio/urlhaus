@@ -1,29 +1,29 @@
 {{#if details.url_count}}
-  <span class="integration-summary-tag integration-background-color integration-border-color">
+  <span {{on "click" (optional this.scrollToIntegration)}} class="integration-summary-tag integration-background-color integration-border-color">
     <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
     <span class="integration-text-color">URL Count: {{details.url_count}}</span>
   </span>
 {{/if}}
 {{#if details.url_status}}
-  <span class="integration-summary-tag integration-background-color integration-border-color">
+  <span {{on "click" (optional this.scrollToIntegration)}} class="integration-summary-tag integration-background-color integration-border-color">
     <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
     <span class="integration-text-color">URL Status: {{details.url_status}}</span>
   </span>
 {{/if}}
 {{#if details.threat}}
-  <span class="integration-summary-tag integration-background-color integration-border-color">
+  <span {{on "click" (optional this.scrollToIntegration)}} class="integration-summary-tag integration-background-color integration-border-color">
     <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
     <span class="integration-text-color">Threat Type: {{details.threat}}</span>
   </span>
 {{/if}}
 {{#if details.file_type}}
-  <span class="integration-summary-tag integration-background-color integration-border-color">
+  <span {{on "click" (optional this.scrollToIntegration)}} class="integration-summary-tag integration-background-color integration-border-color">
     <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
     <span class="integration-text-color">File Type: {{details.file_type}}</span>
   </span>
 {{/if}}
 {{#if details.signature}}
-  <span class="integration-summary-tag integration-background-color integration-border-color">
+  <span {{on "click" (optional this.scrollToIntegration)}} class="integration-summary-tag integration-background-color integration-border-color">
     <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
     <span class="integration-text-color">Signature: {{details.signature}}</span>
   </span>
