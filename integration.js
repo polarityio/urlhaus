@@ -170,7 +170,14 @@ function doLookup(entities, options, cb) {
     }
 
     results.forEach((result) => {
-      if (result.body === null || _isMiss(result.body) || result.body.query_status === "no_results" || result.body.query_status === "invalid_url" || result.body.url_count <= Number(options.minUrl)) {
+      if (
+        result.body === null ||
+        _isMiss(result.body) ||
+        result.body.query_status === 'no_results' ||
+        result.body.query_status === 'invalid_url' ||
+        result.body.query_status === 'invalid_host' ||
+        result.body.url_count <= Number(options.minUrl)
+      ) {
         lookupResults.push({
           entity: result.entity,
           data: null
