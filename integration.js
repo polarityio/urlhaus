@@ -15,7 +15,6 @@ let ipBlocklistRegex = null;
 
 const MAX_DOMAIN_LABEL_LENGTH = 63;
 const MAX_ENTITY_LENGTH = 100;
-const MAX_PARALLEL_LOOKUPS = 10;
 const IGNORED_IPS = new Set(['127.0.0.1', '255.255.255.255', '0.0.0.0']);
 let limiter = null;
 
@@ -119,29 +118,6 @@ const _lookupEntity = (entity, options, cb) => {
 
   requestWithDefaults(requestOptions, (err, res, body) => {
     if (err) {
-      return cb(err);
-    }
-
-    Logger.trace({ BODY: body });
-    Logger.trace({ RESSSIE: res });
-
-    if (res.statusCode && res.statusCode === 404) return cb(null, { entity, data: null });
-
-    if (res.statusCode === 401 || res.statusCode === 403) {
-      return cb(null, {
-        entity,
-        isVolatile: true,
-        data: {
-          summary: [], //TODO
-          details: {
-            errorMessage: '', //TODO
-            allowRetry: res.statusCode !== 401
-          }
-        }
-      });
-    }
-
-    if (err) {
       Logger.error(err, 'Request Error');
       cb({
         detail: 'Unexpected Error',
@@ -150,13 +126,35 @@ const _lookupEntity = (entity, options, cb) => {
       });
     }
 
-    cb(null, {
-      entity,
-      data: {
-        summary: [], //TODO,
-        details: res.body
-      }
-    });
+    const errorMsg = res.body && res.body;
+    switch (res.statusCode) {
+      case 404:
+        cb(null, { entity, data: null });
+        break;
+      case 401:
+      case 403:
+        cb(null, {
+          entity,
+          isVolatile: true,
+          data: {
+            summary: [],
+            details: {
+              errorMessage: errorMsg,
+              allowRetry: res.statusCode !== 401
+            }
+          }
+        });
+        break;
+      default:
+        // status is 200 and there is data to return
+        cb(null, {
+          entity,
+          data: {
+            summary: [],
+            details: res.body
+          }
+        });
+    }
   });
 };
 
@@ -174,61 +172,61 @@ function doLookup(entities, options, cb) {
   if (!limiter) _setupLimiter(options);
 
   entities.forEach((entity) => {
-    hasValidIndicator = true;
+    if (!_isInvalidEntity(entity) && !_isEntityBlocklisted(entity, options)) {
+      hasValidIndicator = true;
+      limiter.submit(_lookupEntity, entity, options, (err, result) => {
+        const maxRequestQueueLimitHit =
+          (_.isEmpty(err) && _.isEmpty(result)) || (err && err.message === 'This job has been dropped by Bottleneck');
 
-    limiter.submit(_lookupEntity, entity, options, (err, result) => {
-      Logger.trace({ RES: result });
-      const maxRequestQueueLimitHit =
-        (_.isEmpty(err) && _.isEmpty(result)) || (err && err.message === 'This job has been dropped by Bottleneck');
+        let statusCode = _.get(err, 'err.statusCode', '');
+        statusCode = 502;
+        const isGatewayTimeout = statusCode === 502 || statusCode === 504;
+        const isConnectionReset = _.get(err, 'err.error.code', '') === 'ECONNRESET';
 
-      const statusCode = _.get(err, 'err.statusCode', '');
-      const isGatewayTimeout = statusCode === 502 || statusCode === 504;
-      const isConnectionReset = _.get(err, 'err.error.code', '') === 'ECONNRESET';
+        if (maxRequestQueueLimitHit || isConnectionReset || isGatewayTimeout) {
+          // Tracking for logging purposes
+          if (isConnectionReset) numConnectionResets++;
+          if (maxRequestQueueLimitHit) numThrottled++;
 
-      if (maxRequestQueueLimitHit || isConnectionReset || isGatewayTimeout) {
-        // Tracking for logging purposes
-        if (isConnectionReset) numConnectionResets++;
-        if (maxRequestQueueLimitHit) numThrottled++;
-        // TODO: NEED TO TAKE A LOOK AT THIS BEFORE COMMITTING
-        lookupResults.push({
-          entity,
-          isVolatile: true,
-          data: {
-            summary: ['Lookup limit reached'],
-            details: {
-              maxRequestQueueLimitHit,
-              isConnectionReset,
-              errorMessage:
-                'The search failed due to the API search limit. You can retry your search by pressing the "Retry Search" button.'
+          lookupResults.push({
+            entity,
+            isVolatile: true,
+            data: {
+              summary: ['! Lookup limit reached'],
+              details: {
+                maxRequestQueueLimitHit,
+                isConnectionReset,
+                errorMessage:
+                  'The search failed due to the API search limit. You can retry your search by pressing the "Retry Search" button.'
+              }
             }
-          }
-        });
-      } else if (err) {
-        errors.push(err);
-      } else {
-        lookupResults.push(result);
-      }
-
-      if (lookupResults.length + errors.length === entities.length) {
-        if (numConnectionResets > 0 || numThrottled > 0) {
-          Logger.warn(
-            {
-              numEntitiesLookedUp: entities.length,
-              numConnectionResets: numConnectionResets,
-              numLookupsThrottled: numThrottled
-            },
-            'Lookup Limit Error'
-          );
-        }
-        // we got all our results
-        if (errors.length > 0) {
-          cb(errors);
+          });
+        } else if (err) {
+          errors.push(err);
         } else {
-          Logger.trace({ FINAL_RES: lookupResults });
-          cb(null, lookupResults);
+          lookupResults.push(result);
         }
-      }
-    });
+
+        if (lookupResults.length + errors.length === entities.length) {
+          if (numConnectionResets > 0 || numThrottled > 0) {
+            Logger.warn(
+              {
+                numEntitiesLookedUp: entities.length,
+                numConnectionResets: numConnectionResets,
+                numLookupsThrottled: numThrottled
+              },
+              'Lookup Limit Error'
+            );
+          }
+          // we got all our results
+          if (errors.length > 0) {
+            cb(errors);
+          } else {
+            cb(null, lookupResults);
+          }
+        }
+      });
+    }
   });
 
   if (!hasValidIndicator) {
@@ -236,126 +234,25 @@ function doLookup(entities, options, cb) {
   }
 }
 
-// function doLookup(entities, options, cb) {
-//   let lookupResults = [];
-//   let tasks = [];
-
-//   _setupRegexBlocklists(options);
-
-//   Logger.debug(entities);
-
-//   entities.forEach((entity) => {
-//     if (!_isInvalidEntity(entity) && !_isEntityBlocklisted(entity, options)) {
-//       //do the lookup
-//       let requestOptions = {
-//         method: 'POST',
-//         json: true
-//       };
-
-//       if (entity.isIPv4 || entity.isDomain) {
-//         requestOptions.uri = `${options.host}/host/`;
-//         requestOptions.form = {
-//           host: entity.value
-//         };
-//       } else if (entity.isURL) {
-//         requestOptions.uri = `${options.host}/url/`;
-//         requestOptions.form = {
-//           url: entity.value
-//         };
-//       } else if (entity.isMD5) {
-//         requestOptions.uri = `${options.host}/payload/`;
-//         requestOptions.form = {
-//           md5_hash: entity.value
-//         };
-//       } else if (entity.isSHA256) {
-//         requestOptions.uri = `${options.host}/payload/`;
-//         requestOptions.form = {
-//           sha256_hash: entity.value
-//         };
-//       } else {
-//         return;
-//       }
-
-//       Logger.trace({ uri: requestOptions.uri }, 'Request URI');
-//       Logger.trace({ body: requestOptions.body }, 'Request Body');
-
-//       tasks.push(function(done) {
-//         requestWithDefaults(requestOptions, function(error, res, body) {
-//           if (error) {
-//             return done(error);
-//           }
-
-//           //Logger.trace({ body: body, statusCode: res ? res.statusCode : 'N/A' }, 'Result of Lookup');
-
-//           let result = {};
-
-//           if (res.statusCode === 200) {
-//             // we got data!
-//             result = {
-//               entity: entity,
-//               body: body
-//             };
-//           } else if (res.statusCode === 404) {
-//             // no result found
-//             result = {
-//               entity: entity,
-//               body: null
-//             };
-//           } else if (res.statusCode === 202) {
-//             // no result found
-//             result = {
-//               entity: entity,
-//               body: null
-//             };
-//           } else {
-//             // unexpected status code
-//             return done({
-//               err: body,
-//               detail: `${body.error}: ${body.message}`
-//             });
-//           }
-
-//           done(null, result);
-//         });
-//       });
-//     }
-//   });
-
-//   async.parallelLimit(tasks, MAX_PARALLEL_LOOKUPS, (err, results) => {
-//     if (err) {
-//       Logger.error({ err: err }, 'Error');
-//       cb(err);
-//       return;
-//     }
-
-//     results.forEach((result) => {
-//       if (
-//         result.body === null ||
-//         _isMiss(result.body) ||
-//         result.body.query_status === 'no_results' ||
-//         result.body.query_status === 'invalid_url' ||
-//         result.body.query_status === 'invalid_host' ||
-//         result.body.url_count <= Number(options.minUrl)
-//       ) {
-//         lookupResults.push({
-//           entity: result.entity,
-//           data: null
-//         });
-//       } else {
-//         lookupResults.push({
-//           entity: result.entity,
-//           data: {
-//             summary: [],
-//             details: result.body
-//           }
-//         });
-//       }
-//     });
-
-//     Logger.debug({ lookupResults }, 'Results');
-//     cb(null, lookupResults);
-//   });
-// }
+function onMessage(payload, options, callback) {
+  switch (payload.action) {
+    case 'RETRY_LOOKUP':
+      doLookup([payload.entity], options, (err, lookupResults) => {
+        if (err) {
+          Logger.error({ err }, 'Error retrying lookup');
+          callback(err);
+        } else {
+          callback(
+            null,
+            lookupResults && lookupResults[0] && lookupResults[0].data === null
+              ? { data: { summary: ['No Results Found on Retry'] } }
+              : lookupResults[0]
+          );
+        }
+      });
+      break;
+  }
+}
 
 function _isInvalidEntity(entity) {
   // Domains should not be over 100 characters long so if we get any of those we don't look them up
@@ -419,5 +316,6 @@ function _isMiss(body) {
 
 module.exports = {
   doLookup: doLookup,
+  onMessage: onMessage,
   startup: startup
 };
