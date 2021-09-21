@@ -178,8 +178,7 @@ function doLookup(entities, options, cb) {
         const maxRequestQueueLimitHit =
           (_.isEmpty(err) && _.isEmpty(result)) || (err && err.message === 'This job has been dropped by Bottleneck');
 
-        let statusCode = _.get(err, 'err.statusCode', '');
-        statusCode = 502;
+        const statusCode = _.get(err, 'err.statusCode', '');
         const isGatewayTimeout = statusCode === 502 || statusCode === 504;
         const isConnectionReset = _.get(err, 'err.error.code', '') === 'ECONNRESET';
 
