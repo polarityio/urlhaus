@@ -121,39 +121,44 @@ const _lookupEntity = (entity, options, cb) => {
       Logger.error(err, 'Request Error');
       cb({
         detail: 'Unexpected Error',
-        err,
-        data
+        error: err
       });
     }
 
-    const errorMsg = res.body && res.body;
-    switch (res.statusCode) {
-      case 404:
-        cb(null, { entity, data: null });
-        break;
-      case 401:
-      case 403:
-        cb(null, {
-          entity,
-          isVolatile: true,
-          data: {
-            summary: [],
-            details: {
-              errorMessage: errorMsg,
-              allowRetry: res.statusCode !== 401
+    if (res && res.statusCode) {
+      const errorMsg = res && res.body;
+
+      switch (res.statusCode) {
+        case 200:
+          // A 200 status can be returned from the Urlhaus API with no results.
+          // Checking if the status is 'ok', guarantees there is data returned for the searched entity.
+          res.body.query_status === 'ok'
+            ? cb(null, { entity, data: { summary: [], details: res.body } })
+            : cb(null, { entity, data: null });
+          break;
+        case 404:
+          cb(null, { entity, data: null });
+          break;
+        case 401:
+        case 403:
+          cb(null, {
+            entity,
+            isVolatile: true,
+            data: {
+              summary: [],
+              details: {
+                errorMessage: errorMsg,
+                allowRetry: false
+              }
             }
-          }
-        });
-        break;
-      default:
-        // status is 200 and there is data to return
-        cb(null, {
-          entity,
-          data: {
-            summary: [],
-            details: res.body
-          }
-        });
+          });
+          break;
+        default:
+          cb({
+            statusCode: res.statusCode,
+            detail: errorMsg ? errorMsg : `Unexpected ${res.statusCode} status code received`
+          });
+      }
     }
   });
 };
@@ -178,9 +183,9 @@ function doLookup(entities, options, cb) {
         const maxRequestQueueLimitHit =
           (_.isEmpty(err) && _.isEmpty(result)) || (err && err.message === 'This job has been dropped by Bottleneck');
 
-        const statusCode = _.get(err, 'err.statusCode', '');
+        const statusCode = _.get(err, 'statusCode', '');
         const isGatewayTimeout = statusCode === 502 || statusCode === 504;
-        const isConnectionReset = _.get(err, 'err.error.code', '') === 'ECONNRESET';
+        const isConnectionReset = _.get(err, 'error.code', '') === 'ECONNRESET';
 
         if (maxRequestQueueLimitHit || isConnectionReset || isGatewayTimeout) {
           // Tracking for logging purposes
@@ -195,6 +200,7 @@ function doLookup(entities, options, cb) {
               details: {
                 maxRequestQueueLimitHit,
                 isConnectionReset,
+                isGatewayTimeout,
                 errorMessage:
                   'The search failed due to the API search limit. You can retry your search by pressing the "Retry Search" button.'
               }
