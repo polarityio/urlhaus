@@ -1,5 +1,5 @@
-<div class='p-non-exfoliate-outer-padding'>{{#if details.errorMessage}}
-    <div class='mt-2'>
+<div class="p-non-exfoliate-outer-padding">{{#if details.errorMessage}}
+    <div class="mt-2">
       {{!-- <div class="alert alert-danger">
         {{! 
         details.errorMessage should contain custom error message info about the failure.
@@ -10,175 +10,175 @@
       </div> --}}
       {{! Can optionally use the "allowRetry" boolean flag in details to disable retry logic }}
       {{#if (not (eq details.allowRetry false))}}
-        <button type='button' class='p-btn btn btn-sm btn-polarity retry-btn mt-2' {{action 'retryLookup'}}>
+        <button type="button" class="p-btn btn btn-sm btn-polarity retry-btn mt-2" {{action "retryLookup"}}>
           {{#if running}}
-            {{fa-icon icon='spinner-third' fixedWidth=true spin=true}}
+            {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
           {{else}}
             Retry Search
           {{/if}}
         </button>
-        <div class='mt-1'>
+        <div class="mt-1">
           {{details.errorMessage}}
         </div>
-        <div class='mt-1'>
-          <span class='p-footnote'> You can retry your search by pressing the "Retry Search" button.</span>
+        <div class="mt-1">
+          <span class="p-footnote"> You can retry your search by pressing the "Retry Search" button.</span>
         </div>
       {{/if}}
     </div>
   {{else}}
     {{#if details}}
-      <a href='{{details.urlhaus_reference}}'>View in URLhaus
-        {{fa-icon 'external-link-square' class='external-link-icon'}}</a>
+      <a href="{{details.urlhaus_reference}}">View in URLhaus
+        {{fa-icon "external-link-square" class="external-link-icon"}}</a>
 
-      <h1 class='p-title'>
-        {{fa-icon 'info' fixedWidth=true}}
+      <h1 class="p-title">
+        {{fa-icon "info" fixedWidth=true}}
         Details
       </h1>
       {{#if details.file_type}}
         <div>
-          <span class='p-key'>File Type: </span>
-          <span class='p-value'>{{details.file_type}}</span>
+          <span class="p-key">File Type: </span>
+          <span class="p-value">{{details.file_type}}</span>
         </div>
       {{/if}}
       {{#if details.file_size}}
         <div>
-          <span class='p-key'>File Size: </span>
-          <span class='p-value'>{{details.file_size}}</span>
+          <span class="p-key">File Size: </span>
+          <span class="p-value">{{details.file_size}}</span>
         </div>
       {{/if}}
       {{#if details.signature}}
         <div>
-          <span class='p-key'>Signature: </span>
-          <span class='p-value'>{{details.signature}}</span>
+          <span class="p-key">Signature: </span>
+          <span class="p-value">{{details.signature}}</span>
         </div>
       {{/if}}
-      {{#if (eq details.url_status 'online')}}
+      {{#if (eq details.url_status "online")}}
         <div>
-          <span class='p-key'>URL Status: </span>
-          <span class='p-value' style='color:red'>{{details.url_status}} {{fa-icon 'flame'}}</span>
+          <span class="p-key">URL Status: </span>
+          <span class="p-value" style="color:red">{{details.url_status}} {{fa-icon "flame"}}</span>
         </div>
       {{/if}}
-      {{#if (eq details.url_status 'offline')}}
+      {{#if (eq details.url_status "offline")}}
         <div>
-          <span class='p-key'>URL Status: </span>
-          <span class='p-value' style='color:green'>{{details.url_status}}</span>
+          <span class="p-key">URL Status: </span>
+          <span class="p-value" style="color:green">{{details.url_status}}</span>
         </div>
       {{/if}}
       {{#if details.firstseen}}
         <div>
-          <span class='p-key'>First Seen: </span>
-          <span class='p-value'>{{details.firstseen}}</span>
+          <span class="p-key">First Seen: </span>
+          <span class="p-value">{{details.firstseen}}</span>
         </div>
       {{/if}}
       {{#if details.lastseen}}
         <div>
-          <span class='p-key'>Last Seen: </span>
-          <span class='p-value'>{{details.lastseen}}</span>
+          <span class="p-key">Last Seen: </span>
+          <span class="p-value">{{details.lastseen}}</span>
         </div>
       {{/if}}
       {{#if details.date_added}}
         <div>
-          <span class='p-key'>Date Added: </span>
-          <span class='p-value'>{{details.date_added}}</span>
+          <span class="p-key">Date Added: </span>
+          <span class="p-value">{{details.date_added}}</span>
         </div>
       {{/if}}
       {{#if details.threat}}
         <div>
-          <span class='p-key'>Threat Type: </span>
-          <span class='p-value'>{{details.threat}}</span>
+          <span class="p-key">Threat Type: </span>
+          <span class="p-value">{{details.threat}}</span>
         </div>
       {{/if}}
       {{#if details.reporter}}
         <div>
-          <span class='p-key'>Reporter: </span>
-          <span class='p-value'>{{details.reporter}}</span>
+          <span class="p-key">Reporter: </span>
+          <span class="p-value">{{details.reporter}}</span>
         </div>
       {{/if}}
       {{#if details.url_count}}
         <div>
-          <span class='p-key'>URL Count: </span>
-          <span class='p-value'>{{details.url_count}}</span>
+          <span class="p-key">URL Count: </span>
+          <span class="p-value">{{details.url_count}}</span>
         </div>
       {{/if}}
       {{#if details.blacklists.spamhaus_dbl}}
         <div>
-          <span class='p-key'>Spamhaus DBL Status: </span>
-          <span class='p-value'>{{details.blacklists.spamhaus_dbl}}</span>
+          <span class="p-key">Spamhaus DBL Status: </span>
+          <span class="p-value">{{details.blacklists.spamhaus_dbl}}</span>
         </div>
       {{/if}}
       {{#if details.blacklists.surbl}}
         <div>
-          <span class='p-key'>SURBL Status: </span>
-          <span class='p-value'>{{details.blacklists.surbl}}</span>
+          <span class="p-key">SURBL Status: </span>
+          <span class="p-value">{{details.blacklists.surbl}}</span>
         </div>
       {{/if}}
       {{#if details.blacklists.gsb}}
         <div>
-          <span class='p-key'>GSB Status: </span>
-          <span class='p-value'>{{details.blacklists.gsb}}</span>
+          <span class="p-key">GSB Status: </span>
+          <span class="p-value">{{details.blacklists.gsb}}</span>
         </div>
       {{/if}}
       {{#if details.virustotal.result}}
         <div>
-          <span class='p-key'>Virustotal Detection Ratio: </span>
-          <span class='p-value'><a href='{{details.virustotal.link}}'>{{details.virustotal.result}}
-              {{fa-icon 'external-link-square' class='external-link-icon'}}</a></span>
+          <span class="p-key">Virustotal Detection Ratio: </span>
+          <span class="p-value"><a href="{{details.virustotal.link}}">{{details.virustotal.result}}
+              {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
         </div>
       {{/if}}
       {{#if details.virustotal.percent}}
         <div>
-          <span class='p-key'>Virustotal Detection Percent: </span>
-          <span class='p-value'><a href='{{details.virustotal.link}}'>{{details.virustotal.percent}}
-              {{fa-icon 'external-link-square' class='external-link-icon'}}</a></span>
+          <span class="p-key">Virustotal Detection Percent: </span>
+          <span class="p-value"><a href="{{details.virustotal.link}}">{{details.virustotal.percent}}
+              {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
         </div>
       {{/if}}
       {{#if details.urls}}
-        <h1 class='p-title'>
-          {{fa-icon 'bug' fixedWidth=true}}
+        <h1 class="p-title">
+          {{fa-icon "bug" fixedWidth=true}}
           Malware URLs
         </h1>
       {{/if}}
       {{#each details.urls as |url|}}
-        <div class='mb-1'>
+        <div class="mb-1">
           {{#if url.url}}
             <div>
-              <span class='p-key'>Malware URL: </span>
-              <span class='p-value'>{{url.url}}</span>
+              <span class="p-key">Malware URL: </span>
+              <span class="p-value">{{url.url}}</span>
             </div>
             <div>
-              <span class='p-key'>More Info:</span>
-              <span class='p-value'><a href='{{url.urlhaus_reference}}'>View URL in URLhaus
-                  {{fa-icon 'external-link-square' class='external-link-icon'}}</a></span>
-            </div>
-          {{/if}}
-          {{#if (eq url.url_status 'online')}}
-            <div>
-              <span class='p-key'>URL Status: </span>
-              <span class='p-value' style='color:red'>{{url.url_status}} {{fa-icon 'flame'}}</span>
+              <span class="p-key">More Info:</span>
+              <span class="p-value"><a href="{{url.urlhaus_reference}}">View URL in URLhaus
+                  {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
             </div>
           {{/if}}
-          {{#if (eq url.url_status 'offline')}}
+          {{#if (eq url.url_status "online")}}
             <div>
-              <span class='p-key'>URL Status: </span>
-              <span class='p-value' style='color:green'>{{url.url_status}}</span>
+              <span class="p-key">URL Status: </span>
+              <span class="p-value" style="color:red">{{url.url_status}} {{fa-icon "flame"}}</span>
+            </div>
+          {{/if}}
+          {{#if (eq url.url_status "offline")}}
+            <div>
+              <span class="p-key">URL Status: </span>
+              <span class="p-value" style="color:green">{{url.url_status}}</span>
             </div>
           {{/if}}
           {{#if url.date_added}}
             <div>
-              <span class='p-key'>Date Added: </span>
-              <span class='p-value'>{{url.date_added}}</span>
+              <span class="p-key">Date Added: </span>
+              <span class="p-value">{{url.date_added}}</span>
             </div>
           {{/if}}
           {{#if url.threat}}
             <div>
-              <span class='p-key'>Threat Type: </span>
-              <span class='p-value'>{{url.threat}}</span>
+              <span class="p-key">Threat Type: </span>
+              <span class="p-value">{{url.threat}}</span>
             </div>
           {{/if}}
           {{#if url.reporter}}
             <div>
-              <span class='p-key'>Reporter: </span>
-              <span class='p-value'>{{url.reporter}}</span>
+              <span class="p-key">Reporter: </span>
+              <span class="p-value">{{url.reporter}}</span>
             </div>
           {{/if}}
         </div>
