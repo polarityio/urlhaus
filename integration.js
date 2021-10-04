@@ -166,6 +166,7 @@ const _lookupEntity = (entity, options, cb) => {
 function doLookup(entities, options, cb) {
   const lookupResults = [];
   const errors = [];
+  const blockedEntities = [];
   let numConnectionResets = 0;
   let numThrottled = 0;
   let hasValidIndicator = false;
@@ -212,9 +213,9 @@ function doLookup(entities, options, cb) {
           lookupResults.push(result);
         }
 
-        if (lookupResults.length + errors.length === entities.length) {
+        if (lookupResults.length + errors.length + blockedEntities.length === entities.length) {
           if (numConnectionResets > 0 || numThrottled > 0) {
-            Logger.warn(
+            log.warn(
               {
                 numEntitiesLookedUp: entities.length,
                 numConnectionResets: numConnectionResets,
@@ -231,6 +232,8 @@ function doLookup(entities, options, cb) {
           }
         }
       });
+    } else {
+      blockedEntities.push(entity);
     }
   });
 
