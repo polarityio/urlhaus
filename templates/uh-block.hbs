@@ -1,14 +1,5 @@
 <div class="p-non-exfoliate-outer-padding">{{#if details.errorMessage}}
     <div class="mt-2">
-      {{!-- <div class="alert alert-danger">
-        {{! 
-        details.errorMessage should contain custom error message info about the failure.
-        For example, we could not only have why it failed, but if it is a limit error
-        we can put a timer here counting down to when retrying makes sense etc.
-      }}
-        <pre>{{details.errorMessage}}</pre>
-      </div> --}}
-      {{! Can optionally use the "allowRetry" boolean flag in details to disable retry logic }}
       {{#if (not (eq details.allowRetry false))}}
         <button type="button" class="p-btn btn btn-sm btn-polarity retry-btn mt-2" {{action "retryLookup"}}>
           {{#if running}}

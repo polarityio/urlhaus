@@ -202,6 +202,7 @@ function doLookup(entities, options, cb) {
                 maxRequestQueueLimitHit,
                 isConnectionReset,
                 isGatewayTimeout,
+                summaryTag: '! Lookup limit reached',
                 errorMessage:
                   'The search failed due to the API search limit. You can retry your search by pressing the "Retry Search" button.'
               }
