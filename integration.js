@@ -171,8 +171,7 @@ function doLookup(entities, options, cb) {
         const maxRequestQueueLimitHit =
           (_.isEmpty(err) && _.isEmpty(result)) || (err && err.message === 'This job has been dropped by Bottleneck');
         const statusCode = _.get(err, 'statusCode', '');
-        const isGatewayTimeout = statusCode === 502 || statusCode === 504;
-        Logger.trace({ CODE: statusCode, err });
+        const isGatewayTimeout = statusCode === 502 || statusCode === 504 || true;
         const isConnectionReset = _.get(err, 'error.code', '') === 'ECONNRESET';
 
         if (maxRequestQueueLimitHit || isConnectionReset || isGatewayTimeout) {
@@ -184,14 +183,14 @@ function doLookup(entities, options, cb) {
             entity,
             isVolatile: true,
             data: {
-              summary: ['! Lookup limit reached'],
+              summary: ['Lookup limit reached'],
               details: {
                 maxRequestQueueLimitHit,
                 isConnectionReset,
                 isGatewayTimeout,
-                summaryTag: '! Lookup limit reached',
+                summaryTag: 'Lookup limit reached',
                 errorMessage:
-                  'The search failed due to the API search limit. You can retry your search by pressing the "Retry Search" button.'
+                  'A temporary URLhaus API search limit was reached. You can retry your search by pressing the "Retry Search" button.'
               }
             }
           });
@@ -302,12 +301,6 @@ function _isEntityBlocklisted(entity, options) {
   }
 
   return false;
-}
-
-function _isMiss(body) {
-  if (!body) {
-    return true;
-  }
 }
 
 module.exports = {
