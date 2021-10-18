@@ -39,7 +39,7 @@ const Logger = {
     console.info(msg, args);
   },
   error: (args, msg) => {
-    console.error(msg, args);
+    console.info(msg, args);
   },
   debug: (args, msg) => {
     console.info(msg, args);
