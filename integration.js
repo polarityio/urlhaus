@@ -115,7 +115,6 @@ const _lookupEntity = (entity, options, cb) => {
   } else {
     return;
   }
-
   requestWithDefaults(requestOptions, (err, res, body) => {
     if (err) {
       Logger.error(err, 'Request Error');
@@ -136,22 +135,9 @@ const _lookupEntity = (entity, options, cb) => {
             ? cb(null, { entity, data: { summary: [], details: res.body } })
             : cb(null, { entity, data: null });
           break;
+        case 202:
         case 404:
           cb(null, { entity, data: null });
-          break;
-        case 401:
-        case 403:
-          cb(null, {
-            entity,
-            isVolatile: true,
-            data: {
-              summary: [],
-              details: {
-                errorMessage: errorMsg,
-                allowRetry: false
-              }
-            }
-          });
           break;
         default:
           cb({
@@ -181,11 +167,12 @@ function doLookup(entities, options, cb) {
     if (!_isInvalidEntity(entity) && !_isEntityBlocklisted(entity, options)) {
       hasValidIndicator = true;
       limiter.submit(_lookupEntity, entity, options, (err, result) => {
+
         const maxRequestQueueLimitHit =
           (_.isEmpty(err) && _.isEmpty(result)) || (err && err.message === 'This job has been dropped by Bottleneck');
-
         const statusCode = _.get(err, 'statusCode', '');
         const isGatewayTimeout = statusCode === 502 || statusCode === 504;
+        Logger.trace({ CODE: statusCode, err });
         const isConnectionReset = _.get(err, 'error.code', '') === 'ECONNRESET';
 
         if (maxRequestQueueLimitHit || isConnectionReset || isGatewayTimeout) {
@@ -216,7 +203,7 @@ function doLookup(entities, options, cb) {
 
         if (lookupResults.length + errors.length + blockedEntities.length === entities.length) {
           if (numConnectionResets > 0 || numThrottled > 0) {
-            log.warn(
+            Logger.warn(
               {
                 numEntitiesLookedUp: entities.length,
                 numConnectionResets: numConnectionResets,
