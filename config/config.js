@@ -22,8 +22,7 @@ module.exports = {
    * @type String
    * @optional
    */
-  description:
-    'Polarity URLhaus Integration',
+  description: 'Polarity URLhaus Integration',
   entityTypes: ['IPv4', 'url', 'domain', 'md5', 'sha256'],
   /**
    * An array of style files (css or less) that will be included for your integration. Any styles specified in
@@ -97,13 +96,13 @@ module.exports = {
       adminOnly: true
     },
     {
-        key: "minUrl",
-        name: "Minimum URL count",
-        description: "Minimum URL count to be notified about.",
-        default: 0,
-        type: "number",
-        userCanEdit: true,
-        adminOnly: false
+      key: 'minUrl',
+      name: 'Minimum URL count',
+      description: 'Minimum URL count to be notified about.',
+      default: 0,
+      type: 'number',
+      userCanEdit: true,
+      adminOnly: false
     },
     {
       key: 'blocklist',
@@ -117,8 +116,7 @@ module.exports = {
     {
       key: 'domainBlocklistRegex',
       name: 'Ignored Domain Regex',
-      description:
-        'Domains that match the given regex will not be looked up.',
+      description: 'Domains that match the given regex will not be looked up.',
       default: '',
       type: 'text',
       userCanEdit: false,
@@ -132,6 +130,26 @@ module.exports = {
       type: 'text',
       userCanEdit: false,
       adminOnly: false
+    },
+    {
+      key: 'maxConcurrent',
+      name: 'Max Concurrent Requests',
+      description:
+        'Maximum number of concurrent requests.  Integration must be restarted after changing this option. Defaults to 20.',
+      default: 20,
+      type: 'number',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
+      key: 'minTime',
+      name: 'Minimum Time Between Lookups',
+      description:
+        'Minimum amount of time in milliseconds between lookups. Integration must be restarted after changing this option. Defaults to 100.',
+      default: 100,
+      type: 'number',
+      userCanEdit: false,
+      adminOnly: true
     }
   ]
 };

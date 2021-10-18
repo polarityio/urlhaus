@@ -3,8 +3,8 @@
 const request = require('request');
 const _ = require('lodash');
 const config = require('./config/config');
-const async = require('async');
 const fs = require('fs');
+const Bottleneck = require('bottleneck/es5');
 
 let Logger;
 let requestWithDefaults;
@@ -15,8 +15,8 @@ let ipBlocklistRegex = null;
 
 const MAX_DOMAIN_LABEL_LENGTH = 63;
 const MAX_ENTITY_LENGTH = 100;
-const MAX_PARALLEL_LOOKUPS = 10;
 const IGNORED_IPS = new Set(['127.0.0.1', '255.255.255.255', '0.0.0.0']);
+let limiter = null;
 
 /**
  *
@@ -51,6 +51,15 @@ function startup(logger) {
   requestWithDefaults = request.defaults(defaults);
 }
 
+function _setupLimiter(options) {
+  limiter = new Bottleneck({
+    maxConcurrent: Number.parseInt(options.maxConcurrent, 10), // no more than 5 lookups can be running at single time
+    highWater: 100, // no more than 100 lookups can be queued up
+    strategy: Bottleneck.strategy.OVERFLOW,
+    minTime: Number.parseInt(options.minTime, 10) // don't run lookups faster than 1 every 200 ms
+  });
+}
+
 function _setupRegexBlocklists(options) {
   if (options.domainBlocklistRegex !== previousDomainRegexAsString && options.domainBlocklistRegex.length === 0) {
     Logger.debug('Removing Domain Blocklist Regex Filtering');
@@ -77,125 +86,167 @@ function _setupRegexBlocklists(options) {
   }
 }
 
+const _lookupEntity = (entity, options, cb) => {
+  let requestOptions = {
+    method: 'POST',
+    json: true
+  };
+
+  if (entity.isIPv4 || entity.isDomain) {
+    requestOptions.uri = `${options.host}/host/`;
+    requestOptions.form = {
+      host: entity.value
+    };
+  } else if (entity.isURL) {
+    requestOptions.uri = `${options.host}/url/`;
+    requestOptions.form = {
+      url: entity.value
+    };
+  } else if (entity.isMD5) {
+    requestOptions.uri = `${options.host}/payload/`;
+    requestOptions.form = {
+      md5_hash: entity.value
+    };
+  } else if (entity.isSHA256) {
+    requestOptions.uri = `${options.host}/payload/`;
+    requestOptions.form = {
+      sha256_hash: entity.value
+    };
+  } else {
+    return;
+  }
+  requestWithDefaults(requestOptions, (err, res, body) => {
+    if (err) {
+      Logger.error(err, 'Request Error');
+      cb({
+        detail: 'Unexpected Error',
+        error: err
+      });
+    }
+
+    if (res && res.statusCode) {
+      const errorMsg = res && res.body;
+
+      switch (res.statusCode) {
+        case 200:
+          // A 200 status can be returned from the Urlhaus API with no results.
+          // Checking if the status is 'ok', guarantees there is data returned for the searched entity.
+          res.body.query_status === 'ok'
+            ? cb(null, { entity, data: { summary: [], details: res.body } })
+            : cb(null, { entity, data: null });
+          break;
+        case 202:
+        case 404:
+          cb(null, { entity, data: null });
+          break;
+        default:
+          cb({
+            statusCode: res.statusCode,
+            detail: errorMsg ? errorMsg : `Unexpected ${res.statusCode} status code received`
+          });
+      }
+    }
+  });
+};
+
 function doLookup(entities, options, cb) {
-  let lookupResults = [];
-  let tasks = [];
+  const lookupResults = [];
+  const errors = [];
+  const blockedEntities = [];
+  let numConnectionResets = 0;
+  let numThrottled = 0;
+  let hasValidIndicator = false;
 
   _setupRegexBlocklists(options);
 
   Logger.debug(entities);
 
+  if (!limiter) _setupLimiter(options);
+
   entities.forEach((entity) => {
     if (!_isInvalidEntity(entity) && !_isEntityBlocklisted(entity, options)) {
-      //do the lookup
-      let requestOptions = {
-        method: 'POST',
-        json: true
-      };
+      hasValidIndicator = true;
+      limiter.submit(_lookupEntity, entity, options, (err, result) => {
 
-      if (entity.isIPv4 || entity.isDomain) {
-        requestOptions.uri = `${options.host}/host/`;
-        requestOptions.form = {
-          host: entity.value
-        };
-      } else if (entity.isURL) {
-        requestOptions.uri = `${options.host}/url/`;
-        requestOptions.form = {
-          url: entity.value
-        };
-      } else if (entity.isMD5) {
-        requestOptions.uri = `${options.host}/payload/`;
-        requestOptions.form = {
-          md5_hash: entity.value
-        };
-      } else if (entity.isSHA256) {
-        requestOptions.uri = `${options.host}/payload/`;
-        requestOptions.form = {
-          sha256_hash: entity.value
-        };
-      } else {
-        return;
-      }
+        const maxRequestQueueLimitHit =
+          (_.isEmpty(err) && _.isEmpty(result)) || (err && err.message === 'This job has been dropped by Bottleneck');
+        const statusCode = _.get(err, 'statusCode', '');
+        const isGatewayTimeout = statusCode === 502 || statusCode === 504 || true;
+        const isConnectionReset = _.get(err, 'error.code', '') === 'ECONNRESET';
 
-      Logger.trace({ uri: requestOptions.uri }, 'Request URI');
-      Logger.trace({ body: requestOptions.body }, 'Request Body');
+        if (maxRequestQueueLimitHit || isConnectionReset || isGatewayTimeout) {
+          // Tracking for logging purposes
+          if (isConnectionReset) numConnectionResets++;
+          if (maxRequestQueueLimitHit) numThrottled++;
 
-      tasks.push(function(done) {
-        requestWithDefaults(requestOptions, function(error, res, body) {
-          if (error) {
-            return done(error);
+          lookupResults.push({
+            entity,
+            isVolatile: true,
+            data: {
+              summary: ['Lookup limit reached'],
+              details: {
+                maxRequestQueueLimitHit,
+                isConnectionReset,
+                isGatewayTimeout,
+                summaryTag: 'Lookup limit reached',
+                errorMessage:
+                  'A temporary URLhaus API search limit was reached. You can retry your search by pressing the "Retry Search" button.'
+              }
+            }
+          });
+        } else if (err) {
+          errors.push(err);
+        } else {
+          lookupResults.push(result);
+        }
+
+        if (lookupResults.length + errors.length + blockedEntities.length === entities.length) {
+          if (numConnectionResets > 0 || numThrottled > 0) {
+            Logger.warn(
+              {
+                numEntitiesLookedUp: entities.length,
+                numConnectionResets: numConnectionResets,
+                numLookupsThrottled: numThrottled
+              },
+              'Lookup Limit Error'
+            );
           }
-
-          //Logger.trace({ body: body, statusCode: res ? res.statusCode : 'N/A' }, 'Result of Lookup');
-
-          let result = {};
-
-          if (res.statusCode === 200) {
-            // we got data!
-            result = {
-              entity: entity,
-              body: body
-            };
-          } else if (res.statusCode === 404) {
-            // no result found
-            result = {
-              entity: entity,
-              body: null
-            };
-          } else if (res.statusCode === 202) {
-            // no result found
-            result = {
-              entity: entity,
-              body: null
-            };
+          // we got all our results
+          if (errors.length > 0) {
+            cb(errors);
           } else {
-            // unexpected status code
-            return done({
-              err: body,
-              detail: `${body.error}: ${body.message}`
-            });
+            cb(null, lookupResults);
           }
-
-          done(null, result);
-        });
+        }
       });
+    } else {
+      blockedEntities.push(entity);
     }
   });
 
-  async.parallelLimit(tasks, MAX_PARALLEL_LOOKUPS, (err, results) => {
-    if (err) {
-      Logger.error({ err: err }, 'Error');
-      cb(err);
-      return;
-    }
+  if (!hasValidIndicator) {
+    cb(null, []);
+  }
+}
 
-    results.forEach((result) => {
-      if (
-        result.body === null ||
-        _isMiss(result.body) ||
-        result.body.query_status === 'no_results' ||
-        result.body.query_status === 'invalid_url' ||
-        result.body.query_status === 'invalid_host' ||
-        result.body.url_count <= Number(options.minUrl)
-      ) {
-        lookupResults.push({
-          entity: result.entity,
-          data: null
-        });
-      } else {
-        lookupResults.push({
-          entity: result.entity,
-          data: {
-            summary: [],
-            details: result.body
-          }
-        });
-      }
-    });
-
-    Logger.debug({ lookupResults }, 'Results');
-    cb(null, lookupResults);
-  });
+function onMessage(payload, options, callback) {
+  switch (payload.action) {
+    case 'RETRY_LOOKUP':
+      doLookup([payload.entity], options, (err, lookupResults) => {
+        if (err) {
+          Logger.error({ err }, 'Error retrying lookup');
+          callback(err);
+        } else {
+          callback(
+            null,
+            lookupResults && lookupResults[0] && lookupResults[0].data === null
+              ? { data: { summary: ['No Results Found on Retry'] } }
+              : lookupResults[0]
+          );
+        }
+      });
+      break;
+  }
 }
 
 function _isInvalidEntity(entity) {
@@ -252,13 +303,8 @@ function _isEntityBlocklisted(entity, options) {
   return false;
 }
 
-function _isMiss(body) {
-  if (!body) {
-    return true;
-  }
-}
-
 module.exports = {
   doLookup: doLookup,
+  onMessage: onMessage,
   startup: startup
 };
