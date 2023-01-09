@@ -1,0 +1,107 @@
+{
+  "name": "URLhaus",
+  "acronym": "URLH",
+  "description": "Polarity URLhaus Integration",
+  "entityTypes": [
+    "IPv4",
+    "url",
+    "domain",
+    "MD5",
+    "SHA256"
+  ],
+  "styles": [
+    "./styles/uh.less"
+  ],
+  "block": {
+    "component": {
+      "file": "./components/uh-block.js"
+    },
+    "template": {
+      "file": "./templates/uh-block.hbs"
+    }
+  },
+  "summary": {
+    "component": {
+      "file": "./components/uh-summary.js"
+    },
+    "template": {
+      "file": "./templates/uh-summary.hbs"
+    }
+  },
+  "request": {
+    "cert": "",
+    "key": "",
+    "passphrase": "",
+    "ca": "",
+    "proxy": "",
+    "rejectUnauthorized": true
+  },
+  "logging": {
+    "level": "info"
+  },
+  "options": [
+    {
+      "key": "host",
+      "name": "URLhaus API URL",
+      "description": "The base URL for the URLhaus API",
+      "default": "https://urlhaus-api.abuse.ch/v1",
+      "type": "text",
+      "userCanEdit": false,
+      "adminOnly": true
+    },
+    {
+      "key": "minUrl",
+      "name": "Minimum URL count",
+      "description": "Minimum URL count to be notified about.",
+      "default": 0,
+      "type": "number",
+      "userCanEdit": true,
+      "adminOnly": false
+    },
+    {
+      "key": "blocklist",
+      "name": "Ignored Entities",
+      "description": "List of domains and IPs that you never want to send to URLhaus",
+      "default": "",
+      "type": "text",
+      "userCanEdit": false,
+      "adminOnly": false
+    },
+    {
+      "key": "domainBlocklistRegex",
+      "name": "Ignored Domain Regex",
+      "description": "Domains that match the given regex will not be looked up.",
+      "default": "",
+      "type": "text",
+      "userCanEdit": false,
+      "adminOnly": false
+    },
+    {
+      "key": "ipBlocklistRegex",
+      "name": "Ignored IP Regex",
+      "description": "IPs that match the given regex will not be looked up.",
+      "default": "",
+      "type": "text",
+      "userCanEdit": false,
+      "adminOnly": false
+    },
+    {
+      "key": "maxConcurrent",
+      "name": "Max Concurrent Requests",
+      "description": "Maximum number of concurrent requests.  Integration must be restarted after changing this option. Defaults to 20.",
+      "default": 20,
+      "type": "number",
+      "userCanEdit": false,
+      "adminOnly": true
+    },
+    {
+      "key": "minTime",
+      "name": "Minimum Time Between Lookups",
+      "description": "Minimum amount of time in milliseconds between lookups. Integration must be restarted after changing this option. Defaults to 100.",
+      "default": 100,
+      "type": "number",
+      "userCanEdit": false,
+      "adminOnly": true
+    }
+  ]
+}
