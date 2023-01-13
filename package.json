@@ -1,7 +1,7 @@
 {
-  "main": "./integration.js",
   "name": "URLhaus",
-  "version": "3.2.6-beta",
+  "version": "3.2.7-beta",
+  "main": "./integration.js",
   "private": true,
   "scripts": {
     "test": "jest"
