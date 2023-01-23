@@ -2,16 +2,9 @@
   "name": "URLhaus",
   "acronym": "URLH",
   "description": "Polarity URLhaus Integration",
-  "entityTypes": [
-    "IPv4",
-    "url",
-    "domain",
-    "MD5",
-    "SHA256"
-  ],
-  "styles": [
-    "./styles/uh.less"
-  ],
+  "entityTypes": ["IPv4", "url", "domain", "MD5", "SHA256"],
+  "defaultColor": "light-pink",
+  "styles": ["./styles/uh.less"],
   "block": {
     "component": {
       "file": "./components/uh-block.js"
