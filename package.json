@@ -1,6 +1,6 @@
 {
   "name": "URLhaus",
-  "version": "3.2.8-beta",
+  "version": "3.2.8",
   "main": "./integration.js",
   "private": true,
   "scripts": {
