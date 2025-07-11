@@ -89,7 +89,10 @@ function _setupRegexBlocklists(options) {
 const _lookupEntity = (entity, options, cb) => {
   let requestOptions = {
     method: 'POST',
-    json: true
+    json: true,
+    headers: {
+      'Auth-Key': options.authKey
+    }
   };
 
   if (entity.isIPv4 || entity.isDomain) {
@@ -119,7 +122,7 @@ const _lookupEntity = (entity, options, cb) => {
     if (err) {
       Logger.error(err, 'Request Error');
       cb({
-        detail: 'Unexpected Error',
+        detail: 'Unexpected Network Error',
         error: err
       });
     }
@@ -132,12 +135,32 @@ const _lookupEntity = (entity, options, cb) => {
           // A 200 status can be returned from the Urlhaus API with no results.
           // Checking if the status is 'ok', guarantees there is data returned for the searched entity.
           res.body.query_status === 'ok'
-            ? cb(null, { entity, data: { summary: [], details: res.body } })
+            ? cb(null, {
+                entity,
+                data: {
+                  summary: getSummaryTags(res.body),
+                  details: {
+                    ...res.body,
+                    // Add an index counter to make it easy to display the index in the template with paged data
+                    urls: Array.isArray(res.body.urls)
+                      ? res.body.urls.map((result, index) => {
+                          return { _index: index + 1, ...result };
+                        })
+                      : []
+                  }
+                }
+              })
             : cb(null, { entity, data: null });
           break;
         case 202:
         case 404:
           cb(null, { entity, data: null });
+          break;
+        case 403:
+          cb({
+            detail: 'An invalid or unknown Auth Key was provided',
+            error: errorMsg
+          });
           break;
         default:
           cb({
@@ -149,6 +172,31 @@ const _lookupEntity = (entity, options, cb) => {
   });
 };
 
+function getSummaryTags(body) {
+  const tags = [];
+  if (body && body.url_count) {
+    tags.push(`URL Count: ${body.url_count}`);
+  }
+
+  if (body && body.url_status) {
+    tags.push(`URL Status: ${body.url_status}`);
+  }
+
+  if (body && body.threat) {
+    tags.push(`Threat Type: ${body.threat}`);
+  }
+
+  if (body && body.file_type) {
+    tags.push(`File Type: ${body.file_type}`);
+  }
+
+  if (body && body.signature) {
+    tags.push(`Signature: ${body.signature}`);
+  }
+
+  return tags;
+}
+
 function doLookup(entities, options, cb) {
   const lookupResults = [];
   const errors = [];
@@ -159,7 +207,7 @@ function doLookup(entities, options, cb) {
 
   _setupRegexBlocklists(options);
 
-  Logger.debug(entities);
+  Logger.debug({ entities }, 'doLookup');
 
   if (!limiter) _setupLimiter(options);
 
@@ -167,9 +215,9 @@ function doLookup(entities, options, cb) {
     if (!_isInvalidEntity(entity) && !_isEntityBlocklisted(entity, options)) {
       hasValidIndicator = true;
       limiter.submit(_lookupEntity, entity, options, (err, result) => {
-
         const maxRequestQueueLimitHit =
-          (_.isEmpty(err) && _.isEmpty(result)) || (err && err.message === 'This job has been dropped by Bottleneck');
+          ((err === null || typeof err === 'undefined') && _.isEmpty(result)) || (err && err.message === 'This job has been dropped by Bottleneck');
+        
         const statusCode = _.get(err, 'statusCode', '');
         const isGatewayTimeout = statusCode === 502 || statusCode === 504;
         const isConnectionReset = _.get(err, 'error.code', '') === 'ECONNRESET';
@@ -212,8 +260,12 @@ function doLookup(entities, options, cb) {
             );
           }
           // we got all our results
+          Logger.trace({ lookupResults }, 'Lookup Results');
           if (errors.length > 0) {
-            cb(errors);
+            cb({ 
+              details: 'An unexpected error was encountered',
+              errors
+            });
           } else {
             cb(null, lookupResults);
           }
@@ -303,8 +355,24 @@ function _isEntityBlocklisted(entity, options) {
   return false;
 }
 
+function validateOptions(userOptions, cb) {
+  let errors = [];
+  if (
+    typeof userOptions.authKey.value !== 'string' ||
+    (typeof userOptions.authKey.value === 'string' && userOptions.authKey.value.length === 0)
+  ) {
+    errors.push({
+      key: 'authKey',
+      message: 'You must provide a Urlhaus Auth Key'
+    });
+  }
+
+  cb(null, errors);
+}
+
 module.exports = {
-  doLookup: doLookup,
-  onMessage: onMessage,
-  startup: startup
+  doLookup,
+  onMessage,
+  startup,
+  validateOptions
 };

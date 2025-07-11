@@ -43,6 +43,15 @@
       "adminOnly": true
     },
     {
+      "key": "authKey",
+      "name": "URLhaus Auth Key",
+      "description": "Your URLhaus Auth Key",
+      "default": "",
+      "type": "password",
+      "userCanEdit": false,
+      "adminOnly": true
+    },
+    {
       "key": "minUrl",
       "name": "Minimum URL count",
       "description": "Minimum URL count to be notified about.",
