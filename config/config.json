@@ -30,7 +30,7 @@
     "proxy": ""
   },
   "logging": {
-    "level": "info"
+    "level": "trace"
   },
   "options": [
     {
@@ -39,6 +39,15 @@
       "description": "The base URL for the URLhaus API",
       "default": "https://urlhaus-api.abuse.ch/v1",
       "type": "text",
+      "userCanEdit": false,
+      "adminOnly": true
+    },
+    {
+      "key": "authKey",
+      "name": "URLhaus Auth Key",
+      "description": "Your URLhaus Auth Key",
+      "default": "",
+      "type": "password",
       "userCanEdit": false,
       "adminOnly": true
     },
