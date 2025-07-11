@@ -122,7 +122,7 @@ const _lookupEntity = (entity, options, cb) => {
     if (err) {
       Logger.error(err, 'Request Error');
       cb({
-        detail: 'Unexpected Error',
+        detail: 'Unexpected Network Error',
         error: err
       });
     }
@@ -155,6 +155,12 @@ const _lookupEntity = (entity, options, cb) => {
         case 202:
         case 404:
           cb(null, { entity, data: null });
+          break;
+        case 403:
+          cb({
+            detail: 'An invalid or unknown Auth Key was provided',
+            error: errorMsg
+          });
           break;
         default:
           cb({
@@ -210,7 +216,8 @@ function doLookup(entities, options, cb) {
       hasValidIndicator = true;
       limiter.submit(_lookupEntity, entity, options, (err, result) => {
         const maxRequestQueueLimitHit =
-          (_.isEmpty(err) && _.isEmpty(result)) || (err && err.message === 'This job has been dropped by Bottleneck');
+          ((err === null || typeof err === 'undefined') && _.isEmpty(result)) || (err && err.message === 'This job has been dropped by Bottleneck');
+        
         const statusCode = _.get(err, 'statusCode', '');
         const isGatewayTimeout = statusCode === 502 || statusCode === 504;
         const isConnectionReset = _.get(err, 'error.code', '') === 'ECONNRESET';
@@ -253,10 +260,12 @@ function doLookup(entities, options, cb) {
             );
           }
           // we got all our results
-
           Logger.trace({ lookupResults }, 'Lookup Results');
           if (errors.length > 0) {
-            cb(errors);
+            cb({ 
+              details: 'An unexpected error was encountered',
+              errors
+            });
           } else {
             cb(null, lookupResults);
           }
