@@ -6,10 +6,13 @@ To learn more information about URLhaus, please go to: https://urlhaus.abuse.ch
 
 Check out the integration in action below:
 
-![urlhaus](https://user-images.githubusercontent.com/22529325/59939394-cddca100-9425-11e9-9c79-79bb94564ada.gif)
+<img src="./images/overlay.png" width="50%">
 
 ### URLhaus URL
 The base URL to use for the URLhaus API
+
+### URLhaus Auth Key
+Your URLhaus Auth Key. See https://urlhaus-api.abuse.ch/#auth_key for information on obtaining a key.
 
 ### Minimum URL Count
 Minimum count of urls to be notified on from URLhaus
