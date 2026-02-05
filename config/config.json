@@ -3,9 +3,17 @@
   "name": "URLhaus",
   "acronym": "URLH",
   "description": "Polarity URLhaus Integration",
-  "entityTypes": ["IPv4", "url", "domain", "MD5", "SHA256"],
+  "entityTypes": [
+    "IPv4",
+    "url",
+    "domain",
+    "MD5",
+    "SHA256"
+  ],
   "defaultColor": "light-pink",
-  "styles": ["./styles/uh.less"],
+  "styles": [
+    "./styles/uh.less"
+  ],
   "block": {
     "component": {
       "file": "./components/uh-block.js"
@@ -105,5 +113,10 @@
       "userCanEdit": false,
       "adminOnly": true
     }
-  ]
+  ],
+  "reducer": {
+    "details": {
+      "file": "./reducers/details.json"
+    }
+  }
 }

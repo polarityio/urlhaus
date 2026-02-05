@@ -1,0 +1,81 @@
+{
+  "root": {
+    "path": "",
+    "on_null": "return_empty"
+  },
+  "pipeline": [
+    {
+      "op": "copy",
+      "from": "query_status",
+      "to": "reduced_results.query_status"
+    },
+    {
+      "op": "copy",
+      "from": "url_count",
+      "to": "reduced_results.url_count"
+    },
+    {
+      "op": "copy",
+      "from": "url_status",
+      "to": "reduced_results.url_status"
+    },
+    {
+      "op": "copy",
+      "from": "threat",
+      "to": "reduced_results.threat"
+    },
+    {
+      "op": "copy",
+      "from": "file_type",
+      "to": "reduced_results.file_type"
+    },
+    {
+      "op": "copy",
+      "from": "file_size",
+      "to": "reduced_results.file_size"
+    },
+    {
+      "op": "copy",
+      "from": "signature",
+      "to": "reduced_results.signature"
+    },
+    {
+      "op": "copy",
+      "from": "firstseen",
+      "to": "reduced_results.firstseen"
+    },
+    {
+      "op": "copy",
+      "from": "lastseen",
+      "to": "reduced_results.lastseen"
+    },
+    {
+      "op": "copy",
+      "from": "date_added",
+      "to": "reduced_results.date_added"
+    },
+    {
+      "op": "copy",
+      "from": "reporter",
+      "to": "reduced_results.reporter"
+    },
+    {
+      "op": "copy",
+      "from": "urlhaus_reference",
+      "to": "reduced_results.urlhaus_reference"
+    },
+    {
+      "op": "copy",
+      "from": "blacklists",
+      "to": "reduced_results.blacklists"
+    },
+    {
+      "op": "prune",
+      "strategy": "empty_values",
+      "target": "reduced_results"
+    }
+  ],
+  "output": {
+    "result": "$working.reduced_results"
+  }
+}

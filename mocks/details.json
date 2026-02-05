@@ -1,0 +1,59 @@
+{
+  "query_status": "ok",
+  "url_count": 3,
+  "url_status": "online",
+  "threat": "malware_download",
+  "file_type": "exe",
+  "file_size": "524288",
+  "signature": "Emotet",
+  "firstseen": "2024-01-15 10:23:45",
+  "lastseen": "2024-01-16 03:15:22",
+  "date_added": "2024-01-15 10:25:00",
+  "reporter": "abuse_ch",
+  "urlhaus_reference": "https://urlhaus.abuse.ch/host/example.malicious-domain.com/",
+  "blacklists": {
+    "spamhaus_dbl": "listed",
+    "surbl": "listed",
+    "gsb": "not listed"
+  },
+  "urls": [
+    {
+      "_index": 1,
+      "url": "http://example.malicious-domain.com/payload/malware.exe",
+      "url_status": "online",
+      "date_added": "2024-01-15 10:23:45",
+      "threat": "malware_download",
+      "reporter": "abuse_ch",
+      "tags": ["exe", "Emotet", "Epoch4"],
+      "urlhaus_reference": "https://urlhaus.abuse.ch/url/123456/"
+    },
+    {
+      "_index": 2,
+      "url": "http://example.malicious-domain.com/downloads/trojan.bin",
+      "url_status": "offline",
+      "date_added": "2024-01-14 08:15:30",
+      "threat": "malware_download",
+      "reporter": "security_researcher",
+      "tags": ["bin", "trojan"],
+      "urlhaus_reference": "https://urlhaus.abuse.ch/url/123457/"
+    },
+    {
+      "_index": 3,
+      "url": "http://example.malicious-domain.com/files/payload.dll",
+      "url_status": "online",
+      "date_added": "2024-01-16 03:15:22",
+      "threat": "malware_download",
+      "reporter": "abuse_ch",
+      "tags": ["dll", "Emotet"],
+      "urlhaus_reference": "https://urlhaus.abuse.ch/url/123458/"
+    }
+  ],
+  "md5_hash": "5d41402abc4b2a76b9719d911017c592",
+  "sha256_hash": "6ca13d52ca70c883e0f0bb101e425a89e8624de51db2d2392593af6a84118090",
+  "urlhaus_download": "https://urlhaus-api.abuse.ch/v1/download/6ca13d52ca70c883e0f0bb101e425a89e8624de51db2d2392593af6a84118090/",
+  "virustotal": {
+    "result": "45/70",
+    "percent": "64.29",
+    "link": "https://www.virustotal.com/gui/file/6ca13d52ca70c883e0f0bb101e425a89e8624de51db2d2392593af6a84118090"
+  }
+}
